@@ -38,15 +38,27 @@ def create_app(config_class=Config):
         # Check if Firebase is already initialized
         firebase_admin.get_app()
     except ValueError:
-        # Initialize Firebase Admin SDK with service account
-        cred_path = os.path.join(os.path.dirname(__file__), '..', 'firebase-service-account.json')
-        if os.path.exists(cred_path):
-            cred = credentials.Certificate(cred_path)
+        # Try to use base64-encoded service account from environment variable (production)
+        service_account_base64 = os.environ.get('FIREBASE_SERVICE_ACCOUNT_BASE64')
+
+        if service_account_base64:
+            # Decode base64 and parse JSON
+            import base64
+            import json
+            service_account_json = base64.b64decode(service_account_base64)
+            service_account_dict = json.loads(service_account_json)
+            cred = credentials.Certificate(service_account_dict)
             firebase_admin.initialize_app(cred)
+            print("✅ Firebase initialized from environment variable")
         else:
-            # For development, you can use default credentials
-            # Make sure to add the service account JSON file before deploying
-            print("Warning: Firebase service account file not found. Add firebase-service-account.json to backend folder.")
+            # Fall back to file (for local development)
+            cred_path = os.path.join(os.path.dirname(__file__), '..', 'firebase-service-account.json')
+            if os.path.exists(cred_path):
+                cred = credentials.Certificate(cred_path)
+                firebase_admin.initialize_app(cred)
+                print("✅ Firebase initialized from file")
+            else:
+                print("⚠️ Warning: Firebase service account not configured. Authentication will not work.")
 
     # Register blueprints
     from app.routes import auth, calculator, user
