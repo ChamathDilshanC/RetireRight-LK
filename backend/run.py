@@ -7,7 +7,10 @@ from app.config import config
 
 # Get environment from environment variable, default to development
 env = os.environ.get('FLASK_ENV', 'development')
-app = create_app(config.get(env, config['default']))
+
+# Create the Flask app instance
+config_class = config.get(env, config['default'])
+app = create_app(config_class)
 
 if __name__ == '__main__':
     # Run the app
