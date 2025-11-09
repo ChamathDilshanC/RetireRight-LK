@@ -1,0 +1,30 @@
+# Backend dependencies for RetireRight LK
+# EPF/ETF Calculator for Sri Lanka
+
+# Flask Framework
+Flask>=3.0.0
+Flask-CORS>=4.0.0
+Flask-SQLAlchemy>=3.1.1
+
+# Firebase Admin SDK
+firebase-admin==6.4.0
+
+# Database
+SQLAlchemy>=2.0.35
+
+# Numerical calculations
+# Using flexible version to ensure pre-built wheels are available on Windows
+numpy>=1.24.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# WSGI server for production
+gunicorn==21.2.0
+
+# Utilities
+python-dateutil==2.8.2
+
+# Development dependencies
+pytest==7.4.3
+pytest-flask==1.3.0

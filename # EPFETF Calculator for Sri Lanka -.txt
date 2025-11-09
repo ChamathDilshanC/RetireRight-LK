@@ -1,0 +1,582 @@
+# EPF/ETF Calculator for Sri Lanka - Detailed Breakdown
+
+## App Overview
+A comprehensive retirement planning calculator specifically for Sri Lankan workers. Calculate Employee Provident Fund (EPF) and Employee Trust Fund (ETF) contributions, project retirement savings with inflation adjustment, and help users understand their financial future.
+
+## Core Features
+
+### 1. **EPF/ETF Contribution Calculator**
+- Employee contribution: 8% or 10% of basic salary (user choice)
+- Employer EPF contribution: 12% of basic salary
+- Employer ETF contribution: 3% of basic salary
+- Calculate monthly, yearly, and lifetime contributions
+- Track contribution history over career
+
+### 2. **Retirement Projection**
+- Project total savings at retirement age (55, 60, or custom)
+- Factor in current EPF interest rate (~9-12% annually)
+- Adjust for inflation (historical Sri Lankan inflation ~5-7%)
+- Show real purchasing power at retirement
+- Compare scenarios: early retirement vs working longer
+
+### 3. **Withdrawal Scenarios**
+- Lump sum withdrawal calculation
+- Monthly pension calculator if kept in EPF
+- Tax implications on withdrawal
+- Optimal withdrawal strategies
+
+### 4. **Goal Planning**
+- Set retirement income goals
+- Calculate required monthly savings to reach goals
+- Gap analysis: current trajectory vs desired outcome
+- Recommend additional savings (private pension, investments)
+
+### 5. **Comparison Tools**
+- Compare EPF returns vs bank fixed deposits
+- EPF vs stock market investments
+- Show EPF as "guaranteed" investment benefit
+
+### 6. **Interactive Visualizations**
+- Growth charts over time
+- Pie charts: employer vs employee contributions
+- Inflation-adjusted vs nominal values
+- Retirement readiness score
+
+---
+
+## Tech Stack
+
+### **Backend**
+
+#### **Framework**
+```python
+FastAPI
+# OR
+Flask  # Simpler for calculator-type apps
+```
+**Why FastAPI?**
+- Fast, modern, async
+- Built-in data validation (perfect for financial calculations)
+- Auto-generated API docs
+- Easy to add user authentication later
+
+**Why Flask?**
+- Simpler, easier learning curve
+- Perfect for smaller apps
+- Large community support
+
+**Recommendation:** Start with **Flask** for simplicity, migrate to FastAPI if scaling.
+
+#### **Database**
+```python
+SQLite  # For MVP (lightweight, serverless)
+# OR
+PostgreSQL  # For production (more robust)
+
+SQLAlchemy  # ORM
+```
+**Schema:**
+- User profiles
+- Salary history
+- Calculation history
+- Saved scenarios
+
+#### **Financial Calculations**
+```python
+numpy  # Compound interest calculations
+pandas  # Data manipulation for projections
+numpy-financial  # NPV, FV, PMT functions
+```
+
+**Core Formula:**
+```python
+# Future Value with compound interest
+FV = PV × (1 + r)^n
+
+# With monthly contributions
+FV = P × [((1 + r)^n - 1) / r]
+
+# Inflation-adjusted value
+Real_Value = Nominal_Value / (1 + inflation_rate)^years
+```
+
+#### **Data Sources**
+```python
+# EPF Interest Rates (historical data)
+# Manual entry or scrape from Central Bank website
+requests + BeautifulSoup4  # Scrape CBSL website
+
+# Inflation Data
+# World Bank API or manual entry from CBSL
+```
+
+---
+
+### **Frontend**
+
+#### **Option 1: Web App (Recommended)**
+```python
+# Simple HTML templates
+Flask + Jinja2  # Backend renders pages
+
+# Styling
+TailwindCSS  # Modern, responsive design
+# OR
+Bootstrap 5  # Quick, professional look
+
+# Interactivity
+Alpine.js  # Lightweight JavaScript
+# OR
+Vanilla JavaScript  # No dependencies
+```
+
+#### **Option 2: Single Page Application (SPA)**
+```javascript
+React + Vite  # Modern, fast
+Recharts  # Beautiful financial charts
+Framer Motion  # Smooth animations
+```
+
+#### **Option 3: Progressive Web App (PWA)**
+```javascript
+React + PWA features
+# Benefits: Works offline, installable on phone
+```
+
+**Recommendation:** Start with **Flask + Jinja2 + TailwindCSS** for fastest development.
+
+---
+
+### **Visualization Libraries**
+
+```python
+# Backend chart generation (if needed)
+Matplotlib  # Static charts
+Plotly  # Interactive charts (can embed in HTML)
+
+# Frontend (recommended)
+Chart.js  # Simple, beautiful charts
+Recharts  # For React apps
+D3.js  # Advanced, custom visualizations
+```
+
+---
+
+### **Additional Tools**
+
+#### **PDF Report Generation**
+```python
+ReportLab  # Generate PDF reports
+# OR
+WeasyPrint  # HTML to PDF (easier styling)
+```
+**Use Case:** Export retirement projection as PDF
+
+#### **Authentication (Optional for MVP)**
+```python
+Flask-Login  # User sessions
+# OR
+Flask-JWT-Extended  # Token-based auth
+bcrypt  # Password hashing
+```
+
+#### **Form Handling**
+```python
+Flask-WTF  # Form validation
+WTForms  # Form generation
+```
+
+#### **Caching**
+```python
+Flask-Caching  # Cache calculation results
+```
+
+#### **Email Notifications**
+```python
+Flask-Mail  # Send reports via email
+```
+
+---
+
+## Complete Tech Stack Summary
+
+```
+Backend:
+├── Flask 3.0+ (Python 3.10+)
+├── SQLAlchemy
+├── SQLite (MVP) → PostgreSQL (production)
+├── numpy-financial
+├── pandas
+└── Flask-WTF
+
+Frontend:
+├── Jinja2 Templates
+├── TailwindCSS
+├── Alpine.js / Vanilla JS
+└── Chart.js
+
+Libraries:
+├── numpy
+├── WeasyPrint (PDF reports)
+├── Flask-Login (authentication)
+└── requests (API calls)
+
+DevOps:
+├── Docker (optional)
+├── Gunicorn (WSGI server)
+├── Nginx (reverse proxy)
+└── Railway/Render/PythonAnywhere (hosting)
+```
+
+---
+
+## Database Schema
+
+```python
+# users table
+{
+    "id": 1,
+    "email": "user@example.com",
+    "password_hash": "...",
+    "created_at": "2025-01-15"
+}
+
+# salary_profiles table
+{
+    "id": 1,
+    "user_id": 1,
+    "current_basic_salary": 75000,  # LKR
+    "age": 28,
+    "years_of_service": 5,
+    "retirement_age": 60,
+    "epf_rate": 10,  # 8% or 10%
+    "expected_salary_increment": 5,  # % per year
+    "created_at": "2025-01-15"
+}
+
+# calculation_history table
+{
+    "id": 1,
+    "user_id": 1,
+    "calculation_type": "retirement_projection",
+    "inputs": {...},  # JSON of all inputs
+    "results": {...},  # JSON of results
+    "created_at": "2025-11-02"
+}
+
+# epf_rates_history table (system data)
+{
+    "year": 2024,
+    "interest_rate": 9.5,
+    "inflation_rate": 6.2
+}
+```
+
+---
+
+## Key Calculations
+
+### **1. Monthly Contributions**
+```python
+def calculate_monthly_contributions(basic_salary, employee_rate=10):
+    employee_epf = basic_salary * (employee_rate / 100)
+    employer_epf = basic_salary * 0.12
+    employer_etf = basic_salary * 0.03
+    
+    total_epf = employee_epf + employer_epf
+    total_contribution = total_epf + employer_etf
+    
+    return {
+        'employee_epf': employee_epf,
+        'employer_epf': employer_epf,
+        'employer_etf': employer_etf,
+        'total_epf': total_epf,
+        'total_monthly': total_contribution
+    }
+```
+
+### **2. Future Value Projection**
+```python
+import numpy as np
+
+def calculate_retirement_savings(
+    current_age,
+    retirement_age,
+    basic_salary,
+    employee_epf_rate=10,
+    annual_increment=5,
+    epf_interest_rate=9.5,
+    current_epf_balance=0
+):
+    years_to_retirement = retirement_age - current_age
+    monthly_rate = epf_interest_rate / 100 / 12
+    
+    total_balance = current_epf_balance
+    salary = basic_salary
+    yearly_data = []
+    
+    for year in range(years_to_retirement):
+        # Monthly contributions
+        employee_contribution = salary * (employee_epf_rate / 100)
+        employer_contribution = salary * 0.12
+        monthly_contribution = employee_contribution + employer_contribution
+        
+        # Calculate year-end balance with compound interest
+        for month in range(12):
+            total_balance = total_balance * (1 + monthly_rate) + monthly_contribution
+        
+        yearly_data.append({
+            'year': year + 1,
+            'age': current_age + year + 1,
+            'salary': salary,
+            'balance': total_balance
+        })
+        
+        # Apply salary increment
+        salary *= (1 + annual_increment / 100)
+    
+    return {
+        'final_balance': total_balance,
+        'yearly_breakdown': yearly_data
+    }
+```
+
+### **3. Inflation Adjustment**
+```python
+def adjust_for_inflation(future_value, years, inflation_rate=6):
+    real_value = future_value / ((1 + inflation_rate / 100) ** years)
+    return real_value
+
+def calculate_purchasing_power(nominal_balance, years_to_retirement, inflation_rate=6):
+    real_value = adjust_for_inflation(nominal_balance, years_to_retirement, inflation_rate)
+    
+    return {
+        'nominal_value': nominal_balance,
+        'real_value': real_value,
+        'purchasing_power_loss': ((nominal_balance - real_value) / nominal_balance) * 100
+    }
+```
+
+### **4. Monthly Pension if Staying in EPF**
+```python
+def calculate_monthly_pension(epf_balance, interest_rate=9.5, years=20):
+    """
+    If user keeps money in EPF and withdraws monthly
+    """
+    monthly_rate = interest_rate / 100 / 12
+    total_months = years * 12
+    
+    # PMT formula: calculate monthly withdrawal
+    monthly_pension = (epf_balance * monthly_rate) / (1 - (1 + monthly_rate) ** -total_months)
+    
+    return monthly_pension
+```
+
+---
+
+## User Interface Flow
+
+### **Page 1: Input Form**
+```
+┌─────────────────────────────────────┐
+│  EPF/ETF Retirement Calculator      │
+├─────────────────────────────────────┤
+│  Current Age: [28]                  │
+│  Retirement Age: [60] [55] [Custom] │
+│  Basic Salary: LKR [75,000]         │
+│  Current EPF Balance: LKR [500,000] │
+│  EPF Rate: ○ 8%  ● 10%              │
+│  Expected Annual Increment: [5%]    │
+│  EPF Interest Rate: [9.5%]          │
+│  Expected Inflation: [6%]           │
+│                                     │
+│  [Calculate My Retirement Savings]  │
+└─────────────────────────────────────┘
+```
+
+### **Page 2: Results Dashboard**
+```
+┌─────────────────────────────────────────────┐
+│  Your Retirement Projection                 │
+├─────────────────────────────────────────────┤
+│  📊 Total at Retirement (Nominal)           │
+│      LKR 45,000,000                         │
+│                                             │
+│  💰 Real Value (Today's Money)              │
+│      LKR 18,500,000                         │
+│                                             │
+│  📈 [Growth Chart: Balance Over Time]       │
+│                                             │
+│  Monthly Breakdown:                         │
+│  • Your contribution: LKR 7,500             │
+│  • Employer EPF: LKR 9,000                  │
+│  • Employer ETF: LKR 2,250                  │
+│  • Total monthly: LKR 18,750                │
+│                                             │
+│  Withdrawal Options:                        │
+│  • Lump sum: LKR 45M (taxable)              │
+│  • Keep in EPF, withdraw monthly: LKR 350K  │
+│                                             │
+│  [Download PDF Report] [Save Scenario]      │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+## Advanced Features
+
+### **1. Scenario Comparison**
+```python
+# Compare multiple scenarios side-by-side
+- Retire at 55 vs 60 vs 65
+- 8% vs 10% contribution
+- Different salary increment assumptions
+```
+
+### **2. Goal-Based Planning**
+```python
+# User sets retirement income goal
+target_monthly_income = 200000  # LKR
+# Calculator shows if achievable and what changes needed
+```
+
+### **3. Tax Calculator**
+```python
+# EPF withdrawal tax rules
+- First LKR 2.5M: tax-free
+- Above that: progressive tax
+```
+
+### **4. Additional Savings Recommender**
+```python
+# If EPF insufficient, suggest:
+- Private pension plans
+- Fixed deposits
+- Stock market investments
+```
+
+### **5. Inflation Scenarios**
+```python
+# Show best/worst/average inflation scenarios
+optimistic = 4%
+realistic = 6%
+pessimistic = 10%
+```
+
+---
+
+## Development Roadmap
+
+### **Phase 1: MVP (2-3 weeks)**
+✅ Basic calculator (input → results)  
+✅ EPF/ETF contribution calculation  
+✅ Simple future value projection  
+✅ Basic web interface  
+✅ PDF export  
+
+### **Phase 2: Enhanced Features (3-4 weeks)**
+✅ User accounts and saved calculations  
+✅ Historical EPF rates database  
+✅ Interactive charts (Chart.js)  
+✅ Inflation adjustment  
+✅ Multiple scenarios  
+
+### **Phase 3: Advanced (4+ weeks)**
+✅ Mobile app (PWA or React Native)  
+✅ Sinhala/Tamil language support  
+✅ Goal-based planning  
+✅ Tax calculator integration  
+✅ Email reports  
+✅ Comparison with other investments  
+
+---
+
+## Deployment Options
+
+### **1. Free Tier Options**
+```
+PythonAnywhere  # Easy Flask deployment, free tier
+Railway.app     # Generous free tier
+Render          # Free tier available
+```
+
+### **2. Paid But Affordable**
+```
+DigitalOcean    # $6/month droplet
+Heroku          # $7/month
+```
+
+### **3. Serverless**
+```
+Vercel (frontend) + Supabase (database)
+```
+
+---
+
+## Project Structure
+
+```
+epf-calculator/
+├── app/
+│   ├── __init__.py
+│   ├── models.py          # Database models
+│   ├── routes.py          # Flask routes
+│   ├── forms.py           # WTForms
+│   ├── calculations.py    # Core calculation logic
+│   └── utils.py           # Helper functions
+├── templates/
+│   ├── base.html
+│   ├── index.html         # Input form
+│   ├── results.html       # Results dashboard
+│   └── history.html       # Saved calculations
+├── static/
+│   ├── css/
+│   │   └── styles.css
+│   ├── js/
+│   │   └── charts.js
+│   └── img/
+├── data/
+│   └── epf_rates.json     # Historical EPF rates
+├── tests/
+│   └── test_calculations.py
+├── requirements.txt
+├── config.py
+└── run.py
+```
+
+---
+
+## Monetization Ideas
+
+1. **Freemium Model**
+   - Free: Basic calculator
+   - Premium (LKR 500/year): Advanced features, unlimited scenarios, priority support
+
+2. **Affiliate Partnerships**
+   - Partner with banks for private pension plans
+   - Commission on insurance products
+
+3. **B2B Sales**
+   - Sell to HR departments for employee benefit calculators
+   - White-label version for financial advisors
+
+4. **Ads**
+   - Display ads for financial services (tastefully)
+
+---
+
+## Key Challenges & Solutions
+
+**Challenge 1:** Accurate EPF interest rates (varies yearly)  
+**Solution:** Database of historical rates + annual updates
+
+**Challenge 2:** Complex tax rules on withdrawal  
+**Solution:** Build comprehensive tax calculator based on Inland Revenue Act
+
+**Challenge 3:** User engagement  
+**Solution:** Gamification - retirement readiness score, milestones
+
+**Challenge 4:** Trust and accuracy  
+**Solution:** Show calculation formulas, cite official sources (EPF, CBSL)
+
+---
