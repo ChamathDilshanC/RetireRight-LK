@@ -5,7 +5,7 @@ import axios from 'axios';
 
 // API base URL
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  import.meta.env.VITE_API_URL || 'https://coral-app-oev86.ondigitalocean.app';
 
 // Create axios instance
 const api = axios.create({

@@ -1,0 +1,327 @@
+{
+  "info": {
+    "name": "RetireRight LK API",
+    "description": "Complete API collection for RetireRight LK - EPF/ETF Calculator for Sri Lanka",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "retireright-lk-api",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://coral-app-oev86.ondigitalocean.app",
+      "type": "string"
+    },
+    {
+      "key": "firebase_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        },
+        "description": "Check if the API is running"
+      },
+      "response": []
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Verify Firebase Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"{{firebase_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify"]
+            },
+            "description": "Verify Firebase token and create/update user in database"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Get current authenticated user information"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logout current user"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/delete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "delete"]
+            },
+            "description": "Permanently delete user account"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Calculator",
+      "item": [
+        {
+          "name": "Calculate Monthly Contributions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"basicSalary\": 75000,\n  \"employeeEpfRate\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/calculator/contributions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "calculator", "contributions"]
+            },
+            "description": "Calculate monthly EPF/ETF contributions"
+          },
+          "response": []
+        },
+        {
+          "name": "Retirement Projection",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentAge\": 28,\n  \"retirementAge\": 60,\n  \"basicSalary\": 75000,\n  \"employeeEpfRate\": 10,\n  \"annualIncrement\": 5,\n  \"epfInterestRate\": 9.5,\n  \"currentEpfBalance\": 500000,\n  \"inflationRate\": 6\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/calculator/retirement-projection",
+              "host": ["{{base_url}}"],
+              "path": ["api", "calculator", "retirement-projection"]
+            },
+            "description": "Calculate complete retirement savings projection"
+          },
+          "response": []
+        },
+        {
+          "name": "Compare Scenarios",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scenarios\": [\n    {\n      \"name\": \"Conservative\",\n      \"currentAge\": 28,\n      \"retirementAge\": 60,\n      \"basicSalary\": 75000,\n      \"employeeEpfRate\": 8,\n      \"annualIncrement\": 3,\n      \"epfInterestRate\": 9.5\n    },\n    {\n      \"name\": \"Aggressive\",\n      \"currentAge\": 28,\n      \"retirementAge\": 60,\n      \"basicSalary\": 75000,\n      \"employeeEpfRate\": 10,\n      \"annualIncrement\": 7,\n      \"epfInterestRate\": 9.5\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/calculator/scenarios/compare",
+              "host": ["{{base_url}}"],
+              "path": ["api", "calculator", "scenarios", "compare"]
+            },
+            "description": "Compare multiple retirement scenarios"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "profile"]
+            },
+            "description": "Get user profile and salary information"
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentBasicSalary\": 80000,\n  \"age\": 29,\n  \"yearsOfService\": 6,\n  \"retirementAge\": 60,\n  \"epfRate\": 10,\n  \"expectedSalaryIncrement\": 5,\n  \"currentEpfBalance\": 600000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "profile"]
+            },
+            "description": "Update or create user salary profile"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Calculation History",
+      "item": [
+        {
+          "name": "Get Calculation History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/calculations?limit=10&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "calculations"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Get user's saved calculation history"
+          },
+          "response": []
+        },
+        {
+          "name": "Save Calculation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calculationType\": \"retirement_projection\",\n  \"inputData\": {\n    \"currentAge\": 28,\n    \"retirementAge\": 60,\n    \"basicSalary\": 75000\n  },\n  \"result\": {\n    \"finalBalance\": 12500000\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/calculations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "calculations"]
+            },
+            "description": "Save a calculation to history"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Calculation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/calculations/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "calculations", "1"]
+            },
+            "description": "Delete a specific calculation from history"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
