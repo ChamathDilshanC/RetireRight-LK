@@ -5,7 +5,6 @@ Flask application factory
 from flask import Flask
 from flask_cors import CORS
 from app.config import Config
-from app.models import db
 import firebase_admin
 from firebase_admin import credentials
 import os
@@ -16,12 +15,7 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Initialize database
-    db.init_app(app)
-
-    # Create database tables
-    with app.app_context():
-        db.create_all()
+    # No persistent database is used. Authentication is handled by Firebase.
 
     # Enable CORS for frontend communication
     CORS(app, resources={

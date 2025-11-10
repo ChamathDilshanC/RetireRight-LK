@@ -4,13 +4,12 @@
 # Flask Framework
 Flask>=3.0.0
 Flask-CORS>=4.0.0
-Flask-SQLAlchemy>=3.1.1
 
 # Firebase Admin SDK
 firebase-admin==6.4.0
 
 # Database
-SQLAlchemy>=2.0.35
+# No database: removed SQLAlchemy/Flask-SQLAlchemy (in-memory stores used)
 
 # Numerical calculations
 # Using flexible version to ensure pre-built wheels are available on Windows

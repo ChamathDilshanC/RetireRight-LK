@@ -6,7 +6,7 @@ Backend API for the EPF/ETF Retirement Calculator for Sri Lanka.
 
 - **Framework**: Flask 3.0
 - **Authentication**: Firebase Admin SDK
-- **Database**: SQLAlchemy (SQLite for dev, PostgreSQL for production)
+- **Database**: No persistent database. Authentication via Firebase; user/profile/calculation data are kept in-memory (non-persistent).
 - **API**: RESTful API with JWT authentication
 
 ## Setup Instructions
@@ -102,30 +102,19 @@ backend/
 │       ├── auth.py          # Auth routes
 │       ├── calculator.py    # Calculator routes
 │       └── user.py          # User routes
-├── data/                    # SQLite database (auto-created)
+├── data/                    # (optional) previously used for SQLite DB; not required. In-memory store is used.
 ├── run.py                   # Application entry point
 ├── requirements.txt         # Python dependencies
 ├── .env.example            # Environment template
 └── README.md               # This file
 ```
 
-## Database Schema
+## Database
 
-### Users
-
-- `id`, `firebase_uid`, `email`, `name`, `profile_picture`, `email_verified`, `created_at`, `last_login`
-
-### Salary Profiles
-
-- `id`, `user_id`, `current_basic_salary`, `age`, `years_of_service`, `retirement_age`, `epf_rate`, `expected_salary_increment`, `current_epf_balance`, `created_at`, `updated_at`
-
-### Calculation History
-
-- `id`, `user_id`, `calculation_type`, `inputs` (JSON), `results` (JSON), `created_at`
-
-### EPF Rate History
-
-- `id`, `year`, `interest_rate`, `inflation_rate`, `created_at`
+This project no longer uses a persistent relational database. User
+authentication is done with Firebase. User profiles and calculation
+history are stored in-memory inside the API process (non-persistent).
+If you need persistence later, re-introduce a DB and models.
 
 ## Deployment (Digital Ocean)
 

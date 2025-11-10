@@ -3,10 +3,15 @@ User profile and calculation history routes
 """
 from flask import Blueprint, request, jsonify
 from app.auth import require_auth
-from app.models import User, SalaryProfile, CalculationHistory, db
 from datetime import datetime
 import logging
 import json
+
+# In-memory stores (non-persistent). Removing SQLAlchemy persistence as requested.
+# Keyed by Firebase UID. These reset when the app restarts.
+salary_profiles = {}  # uid -> profile dict
+calculations_store = {}  # uid -> list of calculation dicts
+_calc_id_counter = 1
 
 logger = logging.getLogger(__name__)
 
@@ -18,23 +23,23 @@ bp = Blueprint('user', __name__, url_prefix='/api/user')
 def get_profile(current_user):
     """Get user profile and salary information"""
     try:
-        user = User.query.filter_by(firebase_uid=current_user['uid']).first()
+        uid = current_user.get('uid')
 
-        if not user:
+        if not uid:
             return jsonify({'error': 'User not found'}), 404
 
-        salary_profile = SalaryProfile.query.filter_by(user_id=user.id).first()
+        profile = salary_profiles.get(uid)
 
         return jsonify({
             'success': True,
             'data': {
                 'user': {
-                    'id': user.id,
-                    'email': user.email,
-                    'name': user.name,
-                    'profilePicture': user.profile_picture
+                    'id': None,
+                    'email': current_user.get('email'),
+                    'name': current_user.get('name'),
+                    'profilePicture': current_user.get('picture')
                 },
-                'salaryProfile': salary_profile.to_dict() if salary_profile else None
+                'salaryProfile': profile
             }
         }), 200
 
@@ -48,44 +53,54 @@ def get_profile(current_user):
 def update_profile(current_user):
     """Update or create salary profile"""
     try:
-        user = User.query.filter_by(firebase_uid=current_user['uid']).first()
+        uid = current_user.get('uid')
 
-        if not user:
+        if not uid:
             return jsonify({'error': 'User not found'}), 404
 
-        data = request.get_json()
-        salary_profile = SalaryProfile.query.filter_by(user_id=user.id).first()
+        data = request.get_json() or {}
 
-        if not salary_profile:
-            salary_profile = SalaryProfile(user_id=user.id)
-            db.session.add(salary_profile)
+        # Build or update in-memory profile
+        now = datetime.utcnow()
+        profile = salary_profiles.get(uid, {
+            'id': None,
+            'currentBasicSalary': None,
+            'age': None,
+            'yearsOfService': None,
+            'retirementAge': 60,
+            'epfRate': 10,
+            'expectedSalaryIncrement': 5.0,
+            'currentEpfBalance': 0.0,
+            'createdAt': now.isoformat(),
+            'updatedAt': now.isoformat()
+        })
 
         # Update fields
         if 'currentBasicSalary' in data:
-            salary_profile.current_basic_salary = data['currentBasicSalary']
+            profile['currentBasicSalary'] = data['currentBasicSalary']
         if 'age' in data:
-            salary_profile.age = data['age']
+            profile['age'] = data['age']
         if 'yearsOfService' in data:
-            salary_profile.years_of_service = data['yearsOfService']
+            profile['yearsOfService'] = data['yearsOfService']
         if 'retirementAge' in data:
-            salary_profile.retirement_age = data['retirementAge']
+            profile['retirementAge'] = data['retirementAge']
         if 'epfRate' in data:
-            salary_profile.epf_rate = data['epfRate']
+            profile['epfRate'] = data['epfRate']
         if 'expectedSalaryIncrement' in data:
-            salary_profile.expected_salary_increment = data['expectedSalaryIncrement']
+            profile['expectedSalaryIncrement'] = data['expectedSalaryIncrement']
         if 'currentEpfBalance' in data:
-            salary_profile.current_epf_balance = data['currentEpfBalance']
+            profile['currentEpfBalance'] = data['currentEpfBalance']
 
-        db.session.commit()
+        profile['updatedAt'] = datetime.utcnow().isoformat()
+        salary_profiles[uid] = profile
 
         return jsonify({
             'success': True,
-            'data': salary_profile.to_dict()
+            'data': profile
         }), 200
 
     except Exception as e:
         logger.error(f"Update profile error: {str(e)}")
-        db.session.rollback()
         return jsonify({'error': 'Failed to update profile', 'message': str(e)}), 500
 
 
@@ -94,19 +109,18 @@ def update_profile(current_user):
 def get_calculations(current_user):
     """Get user's calculation history"""
     try:
-        user = User.query.filter_by(firebase_uid=current_user['uid']).first()
+        uid = current_user.get('uid')
 
-        if not user:
+        if not uid:
             return jsonify({'error': 'User not found'}), 404
 
-        calculations = CalculationHistory.query.filter_by(user_id=user.id)\
-            .order_by(CalculationHistory.created_at.desc())\
-            .limit(50)\
-            .all()
+        items = calculations_store.get(uid, [])
+        # sort by createdAt desc and limit 50
+        sorted_items = sorted(items, key=lambda x: x.get('createdAt', ''), reverse=True)[:50]
 
         return jsonify({
             'success': True,
-            'data': [calc.to_dict() for calc in calculations]
+            'data': sorted_items
         }), 200
 
     except Exception as e:
@@ -119,31 +133,34 @@ def get_calculations(current_user):
 def save_calculation(current_user):
     """Save a calculation to history"""
     try:
-        user = User.query.filter_by(firebase_uid=current_user['uid']).first()
+        global _calc_id_counter
+        uid = current_user.get('uid')
 
-        if not user:
+        if not uid:
             return jsonify({'error': 'User not found'}), 404
 
-        data = request.get_json()
+        data = request.get_json() or {}
 
-        calculation = CalculationHistory(
-            user_id=user.id,
-            calculation_type=data.get('calculationType', 'retirement_projection'),
-            inputs=json.dumps(data.get('inputs', {})),
-            results=json.dumps(data.get('results', {}))
-        )
+        calc = {
+            'id': _calc_id_counter,
+            'userId': None,
+            'calculationType': data.get('calculationType', 'retirement_projection'),
+            'inputs': data.get('inputs', {}),
+            'results': data.get('results', {}),
+            'createdAt': datetime.utcnow().isoformat()
+        }
 
-        db.session.add(calculation)
-        db.session.commit()
+        _calc_id_counter += 1
+
+        calculations_store.setdefault(uid, []).append(calc)
 
         return jsonify({
             'success': True,
-            'data': calculation.to_dict()
+            'data': calc
         }), 201
 
     except Exception as e:
         logger.error(f"Save calculation error: {str(e)}")
-        db.session.rollback()
         return jsonify({'error': 'Failed to save calculation', 'message': str(e)}), 500
 
 
@@ -152,21 +169,22 @@ def save_calculation(current_user):
 def delete_calculation(current_user, calc_id):
     """Delete a calculation from history"""
     try:
-        user = User.query.filter_by(firebase_uid=current_user['uid']).first()
+        uid = current_user.get('uid')
 
-        if not user:
+        if not uid:
             return jsonify({'error': 'User not found'}), 404
 
-        calculation = CalculationHistory.query.filter_by(
-            id=calc_id,
-            user_id=user.id
-        ).first()
+        items = calculations_store.get(uid, [])
+        match = None
+        for item in items:
+            if int(item.get('id')) == int(calc_id):
+                match = item
+                break
 
-        if not calculation:
+        if not match:
             return jsonify({'error': 'Calculation not found'}), 404
 
-        db.session.delete(calculation)
-        db.session.commit()
+        items.remove(match)
 
         return jsonify({
             'success': True,
@@ -175,5 +193,4 @@ def delete_calculation(current_user, calc_id):
 
     except Exception as e:
         logger.error(f"Delete calculation error: {str(e)}")
-        db.session.rollback()
         return jsonify({'error': 'Failed to delete calculation', 'message': str(e)}), 500

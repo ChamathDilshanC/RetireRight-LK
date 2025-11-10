@@ -3,7 +3,6 @@ Authentication routes for Firebase integration
 """
 from flask import Blueprint, request, jsonify
 from app.auth import verify_firebase_token, get_user_from_token, require_auth
-from app.models import User, db
 from datetime import datetime
 import logging
 import json
@@ -45,41 +44,20 @@ def verify_token():
                 'message': 'Failed to verify token'
             }), 401
 
-        # Check if user exists in database
-        user = User.query.filter_by(firebase_uid=user_info['uid']).first()
-
-        if not user:
-            # Create new user
-            user = User(
-                firebase_uid=user_info['uid'],
-                email=user_info['email'],
-                name=user_info['name'],
-                profile_picture=user_info.get('picture'),
-                email_verified=user_info['email_verified']
-            )
-            db.session.add(user)
-            db.session.commit()
-            logger.info(f"Created new user: {user.email}")
-        else:
-            # Update existing user info
-            user.last_login = datetime.utcnow()
-            user.name = user_info['name']
-            user.profile_picture = user_info.get('picture')
-            user.email_verified = user_info['email_verified']
-            db.session.commit()
-            logger.info(f"User logged in: {user.email}")
-
+        # No persistent DB: return the verified user info directly.
+        # Clients should treat this as non-persistent profile data.
+        now = datetime.utcnow()
         return jsonify({
             'success': True,
             'user': {
-                'id': user.id,
-                'uid': user.firebase_uid,
-                'email': user.email,
-                'name': user.name,
-                'profilePicture': user.profile_picture,
-                'emailVerified': user.email_verified,
-                'createdAt': user.created_at.isoformat(),
-                'lastLogin': user.last_login.isoformat() if user.last_login else None
+                'id': None,
+                'uid': user_info['uid'],
+                'email': user_info.get('email'),
+                'name': user_info.get('name'),
+                'profilePicture': user_info.get('picture'),
+                'emailVerified': user_info.get('email_verified', False),
+                'createdAt': now.isoformat(),
+                'lastLogin': now.isoformat()
             }
         }), 200
 
@@ -103,24 +81,17 @@ def get_current_user(current_user):
         Current user information
     """
     try:
-        user = User.query.filter_by(firebase_uid=current_user['uid']).first()
-
-        if not user:
-            return jsonify({
-                'error': 'User not found',
-                'message': 'User does not exist in database'
-            }), 404
-
+        # No DB: return info from the decoded Firebase token
         return jsonify({
             'user': {
-                'id': user.id,
-                'uid': user.firebase_uid,
-                'email': user.email,
-                'name': user.name,
-                'profilePicture': user.profile_picture,
-                'emailVerified': user.email_verified,
-                'createdAt': user.created_at.isoformat(),
-                'lastLogin': user.last_login.isoformat() if user.last_login else None
+                'id': None,
+                'uid': current_user.get('uid'),
+                'email': current_user.get('email'),
+                'name': current_user.get('name'),
+                'profilePicture': current_user.get('picture'),
+                'emailVerified': current_user.get('email_verified', False),
+                'createdAt': None,
+                'lastLogin': None
             }
         }), 200
 
@@ -168,23 +139,12 @@ def delete_account(current_user):
         Success message
     """
     try:
-        user = User.query.filter_by(firebase_uid=current_user['uid']).first()
-
-        if not user:
-            return jsonify({
-                'error': 'User not found',
-                'message': 'User does not exist in database'
-            }), 404
-
-        # Delete user from database
-        db.session.delete(user)
-        db.session.commit()
-
-        logger.info(f"User account deleted: {user.email}")
-
+        # No DB: nothing to delete locally. If you want to delete the Firebase account,
+        # that must be done via Firebase Admin SDK (not performed here).
+        logger.info(f"Requested account delete for UID: {current_user.get('uid')}")
         return jsonify({
             'success': True,
-            'message': 'Account deleted successfully'
+            'message': 'Account deletion is not backed by a local DB. If needed, delete in Firebase.'
         }), 200
 
     except Exception as e:

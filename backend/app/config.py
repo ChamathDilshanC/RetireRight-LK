@@ -18,9 +18,8 @@ class Config:
     FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
 
     # Database Configuration (SQLite for MVP)
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'data', 'app.db')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # No persistent relational database is used. The app relies on Firebase for
+    # authentication and keeps profiles/history in-memory (non-persistent).
 
     # EPF Configuration (Sri Lanka)
     EPF_EMPLOYEE_RATE_OPTIONS = [8, 10]  # Percentage options
@@ -56,7 +55,7 @@ class TestingConfig(Config):
     """Testing configuration"""
     DEBUG = True
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    # No DB settings for testing by default
 
 
 # Configuration dictionary

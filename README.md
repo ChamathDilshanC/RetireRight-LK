@@ -46,7 +46,7 @@ RetireRight-LK/
 
 - **Framework**: Flask 3.0
 - **Authentication**: Firebase Admin SDK
-- **Database**: SQLAlchemy (SQLite/PostgreSQL)
+- **Database**: No persistent DB (in-memory stores used). Firebase is used for auth.
 - **Calculations**: NumPy
 
 ### Frontend
